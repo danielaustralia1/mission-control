@@ -43,6 +43,7 @@ const navGroups: NavGroup[] = [
     items: [
       { id: 'activity', label: 'Activity', icon: <ActivityIcon />, priority: true, essential: true },
       { id: 'logs', label: 'Logs', icon: <LogsIcon />, priority: false, essential: true },
+      { id: 'agent-output', label: 'Terminal', icon: <TerminalIcon />, priority: false },
       { id: 'cost-tracker', label: 'Cost Tracker', icon: <TokensIcon />, priority: false },
       { id: 'nodes', label: 'Nodes', icon: <NodesIcon />, priority: false },
       { id: 'exec-approvals', label: 'Approvals', icon: <ApprovalsIcon />, priority: false },
@@ -92,6 +93,7 @@ const navItemTranslationKeys: Record<string, string> = {
   memory: 'memory',
   activity: 'activity',
   logs: 'logs',
+  'agent-output': 'terminal',
   'cost-tracker': 'costTracker',
   nodes: 'nodes',
   'exec-approvals': 'approvals',
@@ -1508,6 +1510,16 @@ function MonitorIcon() {
       <rect x="1" y="2" width="14" height="10" rx="1.5" />
       <polyline points="4,9 6,6 8,8 12,4" />
       <path d="M5 14h6" />
+    </svg>
+  )
+}
+
+function TerminalIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="2" width="14" height="12" rx="2" />
+      <path d="M4 7l2 2-2 2" />
+      <path d="M9 11h3" />
     </svg>
   )
 }

@@ -22,6 +22,7 @@ import {
   CreateAgentModal
 } from './agent-detail-tabs'
 import { formatModelName, buildTaskStatParts } from '@/lib/agent-card-helpers'
+import { useNavigateToPanel } from '@/lib/navigation'
 import { useMissionControl, type Agent } from '@/store'
 
 const log = createClientLogger('AgentSquadPhase3')
@@ -105,6 +106,7 @@ export function AgentSquadPanelPhase3() {
   const [syncing, setSyncing] = useState(false)
   const [syncToast, setSyncToast] = useState<string | null>(null)
   const [showHidden, setShowHidden] = useState(false)
+  const navigateToPanel = useNavigateToPanel()
 
   // Sync agents from gateway config or local disk
   const syncFromConfig = async (source?: 'local') => {
@@ -522,6 +524,18 @@ export function AgentSquadPanelPhase3() {
                         className="h-6 px-2 text-xs text-blue-300 hover:bg-blue-500/15 hover:text-blue-200"
                       >
                         {t('spawn')}
+                      </Button>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          navigateToPanel('agent-output')
+                        }}
+                        size="xs"
+                        variant="ghost"
+                        className="h-6 px-2 text-xs text-green-300 hover:bg-green-500/15 hover:text-green-200"
+                        title="View agent terminal output"
+                      >
+                        Terminal
                       </Button>
                       <Button
                         onClick={(e) => {

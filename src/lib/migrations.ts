@@ -1268,6 +1268,25 @@ const migrations: Migration[] = [
     up(db: Database.Database) {
       db.exec(`ALTER TABLE agents ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0`)
     }
+  },
+  {
+    id: '043_agent_output_logs',
+    up(db: Database.Database) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS agent_output_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          session_key TEXT NOT NULL,
+          agent_name TEXT,
+          stream TEXT NOT NULL DEFAULT 'stdout',
+          content TEXT NOT NULL,
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch())
+        )
+      `)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_output_logs_session_created ON agent_output_logs(session_key, created_at)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_output_logs_agent_created ON agent_output_logs(agent_name, created_at)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_output_logs_workspace_created ON agent_output_logs(workspace_id, created_at)`)
+    }
   }
 ]
 
