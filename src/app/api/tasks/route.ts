@@ -81,10 +81,25 @@ export async function GET(request: NextRequest) {
     
     // Build dynamic query
     let query = `
-      SELECT t.*, p.name as project_name, p.ticket_prefix as project_prefix
+      SELECT t.*, p.name as project_name, p.ticket_prefix as project_prefix,
+        COALESCE(dep_blocked.cnt, 0) as blocked_by_count,
+        COALESCE(dep_blocks.cnt, 0) as blocks_count
       FROM tasks t
       LEFT JOIN projects p
         ON p.id = t.project_id AND p.workspace_id = t.workspace_id
+      LEFT JOIN (
+        SELECT td.task_id, COUNT(*) as cnt
+        FROM task_dependencies td
+        JOIN tasks bt ON bt.id = td.depends_on_id AND bt.status != 'done'
+        WHERE td.dependency_type = 'blocks'
+        GROUP BY td.task_id
+      ) dep_blocked ON dep_blocked.task_id = t.id
+      LEFT JOIN (
+        SELECT depends_on_id, COUNT(*) as cnt
+        FROM task_dependencies
+        WHERE dependency_type = 'blocks'
+        GROUP BY depends_on_id
+      ) dep_blocks ON dep_blocks.depends_on_id = t.id
       WHERE t.workspace_id = ?
     `;
     const params: any[] = [workspaceId];

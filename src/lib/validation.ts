@@ -53,7 +53,9 @@ export const createTaskSchema = z.object({
   metadata: taskMetadataSchema.default({} as Record<string, unknown>),
 })
 
-export const updateTaskSchema = createTaskSchema.partial()
+export const updateTaskSchema = createTaskSchema.partial().extend({
+  force: z.boolean().optional(),
+})
 
 export const createAgentSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),

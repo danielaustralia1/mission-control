@@ -1045,6 +1045,19 @@ export function TaskBoardPanel() {
                     </div>
                   </div>
 
+                  {/* Dependency indicator */}
+                  {(task as any).blocked_by_count > 0 && (
+                    <div className="mb-2 ml-5.5 flex items-center gap-1 text-[10px] text-red-400">
+                      <span>{'\uD83D\uDD12'}</span>
+                      <span>{(task as any).blocked_by_count} {(task as any).blocked_by_count === 1 ? 'blocker' : 'blockers'}</span>
+                    </div>
+                  )}
+                  {(task as any).blocks_count > 0 && !(task as any).blocked_by_count && (
+                    <div className="mb-2 ml-5.5 flex items-center gap-1 text-[10px] text-blue-400">
+                      <span>Blocks {(task as any).blocks_count} {(task as any).blocks_count === 1 ? 'task' : 'tasks'}</span>
+                    </div>
+                  )}
+
                   {task.description && (
                     <div className="mb-2 ml-5.5 line-clamp-2 overflow-hidden text-xs text-muted-foreground">
                       <MarkdownRenderer content={task.description} preview />
@@ -1178,6 +1191,144 @@ export function TaskBoardPanel() {
         />
       )}
     </div>
+  )
+}
+
+// Task Dependencies Section for detail modal
+function TaskDependenciesSection({ taskId }: { taskId: number }) {
+  const [deps, setDeps] = useState<{ blocked_by: any[]; blocks: any[]; related: any[] } | null>(null)
+  const [adding, setAdding] = useState(false)
+  const [searchId, setSearchId] = useState('')
+
+  useEffect(() => {
+    fetch(`/api/tasks/${taskId}/dependencies`)
+      .then(r => r.json())
+      .then(setDeps)
+      .catch(() => {})
+  }, [taskId])
+
+  const addDep = async (dependsOnId: number, type: string) => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/dependencies`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ depends_on_id: dependsOnId, dependency_type: type }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Failed' }))
+        alert(err.error)
+        return
+      }
+      // Refresh
+      const r = await fetch(`/api/tasks/${taskId}/dependencies`)
+      setDeps(await r.json())
+      setSearchId('')
+      setAdding(false)
+    } catch { /* ignore */ }
+  }
+
+  const removeDep = async (dependsOnId: number) => {
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/dependencies`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ depends_on_id: dependsOnId }),
+      })
+      if (res.ok) {
+        const r = await fetch(`/api/tasks/${taskId}/dependencies`)
+        setDeps(await r.json())
+      }
+    } catch { /* ignore */ }
+  }
+
+  if (!deps) return null
+  const hasDeps = deps.blocked_by.length > 0 || deps.blocks.length > 0 || deps.related.length > 0
+
+  return (
+    <>
+      <div className="col-span-2 mt-2 pt-2 border-t border-border/50">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Dependencies</span>
+          <button
+            className="text-xs text-primary hover:underline"
+            onClick={() => setAdding(!adding)}
+          >
+            {adding ? 'Cancel' : '+ Add'}
+          </button>
+        </div>
+      </div>
+      {adding && (
+        <div className="col-span-2 flex items-center gap-2">
+          <input
+            type="number"
+            placeholder="Task ID"
+            className="w-24 text-xs bg-secondary border border-border rounded px-2 py-1 text-foreground"
+            value={searchId}
+            onChange={e => setSearchId(e.target.value)}
+          />
+          <button
+            className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30"
+            onClick={() => { if (searchId) addDep(Number(searchId), 'blocks') }}
+          >
+            Blocked by
+          </button>
+          <button
+            className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+            onClick={() => { if (searchId) addDep(Number(searchId), 'relates_to') }}
+          >
+            Related
+          </button>
+        </div>
+      )}
+      {deps.blocked_by.length > 0 && (
+        <div className="col-span-2">
+          <span className="text-xs text-red-400 font-medium">Blocked by:</span>
+          <div className="mt-1 space-y-1">
+            {deps.blocked_by.map((t: any) => (
+              <div key={t.id} className="flex items-center justify-between text-xs bg-red-500/10 rounded px-2 py-1">
+                <span className="text-foreground">#{t.id} {t.title}</span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-1 py-0.5 rounded text-[10px] ${t.status === 'done' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                    {t.status}
+                  </span>
+                  <button className="text-red-400 hover:text-red-300" onClick={() => removeDep(t.id)}>x</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {deps.blocks.length > 0 && (
+        <div className="col-span-2">
+          <span className="text-xs text-blue-400 font-medium">Blocks:</span>
+          <div className="mt-1 space-y-1">
+            {deps.blocks.map((t: any) => (
+              <div key={t.id} className="flex items-center justify-between text-xs bg-blue-500/10 rounded px-2 py-1">
+                <span className="text-foreground">#{t.id} {t.title}</span>
+                <span className={`px-1 py-0.5 rounded text-[10px] ${t.status === 'done' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+                  {t.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {deps.related.length > 0 && (
+        <div className="col-span-2">
+          <span className="text-xs text-gray-400 font-medium">Related:</span>
+          <div className="mt-1 space-y-1">
+            {deps.related.map((t: any) => (
+              <div key={t.id} className="text-xs bg-gray-500/10 rounded px-2 py-1 text-foreground">
+                #{t.id} {t.title}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {!hasDeps && !adding && (
+        <div className="col-span-2 text-xs text-muted-foreground">No dependencies</div>
+      )}
+    </>
   )
 }
 
@@ -1582,6 +1733,8 @@ function TaskDetailModal({
                   </div>
                 </>
               )}
+              {/* Dependencies section */}
+              <TaskDependenciesSection taskId={task.id} />
             </div>
           )}
 

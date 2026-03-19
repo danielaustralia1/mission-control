@@ -136,13 +136,40 @@ export async function PUT(
       tags,
       metadata
     } = body;
+    const force = body.force === true
     const normalizedStatus = normalizeTaskUpdateStatus({
       currentStatus: currentTask.status,
       requestedStatus,
       assignedTo: assigned_to,
       assignedToProvided: assigned_to !== undefined,
     })
-    
+
+    // Soft blocker check: warn if moving to in_progress with unresolved dependencies
+    if (
+      normalizedStatus === 'in_progress' &&
+      currentTask.status !== 'in_progress' &&
+      !force
+    ) {
+      const unresolvedBlockers = db
+        .prepare(
+          `SELECT t.id, t.title, t.status FROM tasks t
+           JOIN task_dependencies td ON td.depends_on_id = t.id
+           WHERE td.task_id = ? AND td.dependency_type = 'blocks'
+             AND t.status != 'done' AND td.workspace_id = ?`
+        )
+        .all(taskId, workspaceId) as { id: number; title: string; status: string }[]
+
+      if (unresolvedBlockers.length > 0) {
+        return NextResponse.json(
+          {
+            error: 'Task has unresolved dependencies',
+            blocked_by: unresolvedBlockers,
+          },
+          { status: 409 }
+        )
+      }
+    }
+
     const now = Math.floor(Date.now() / 1000);
     const descriptionMentionResolution = description !== undefined
       ? resolveMentionRecipients(description || '', db, workspaceId)

@@ -165,6 +165,12 @@ export function useServerEvents() {
           }
           break
 
+        // Dependency events — trigger a task refetch by updating a sentinel
+        case 'task.dependency_changed':
+          // The task store will be refreshed by the next poll cycle
+          // since dependency counts are included in the tasks query
+          break
+
         // Activity events
         case 'activity.created':
           if (event.data?.id) {
