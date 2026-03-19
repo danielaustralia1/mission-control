@@ -31,6 +31,7 @@ import { GitHubSyncPanel } from '@/components/panels/github-sync-panel'
 import { SkillsPanel } from '@/components/panels/skills-panel'
 import { LocalAgentsDocPanel } from '@/components/panels/local-agents-doc-panel'
 import { ChannelsPanel } from '@/components/panels/channels-panel'
+import { CoordinationPanel } from '@/components/panels/coordination-panel'
 import { DebugPanel } from '@/components/panels/debug-panel'
 import { SecurityAuditPanel } from '@/components/panels/security-audit-panel'
 import { NodesPanel } from '@/components/panels/nodes-panel'
@@ -566,6 +567,8 @@ function ContentRouter({ tab }: { tab: string }) {
     case 'nodes':
       if (isLocal) return <LocalModeUnavailable panel={tab} />
       return <NodesPanel />
+    case 'coordination':
+      return <CoordinationPanel />
     case 'security':
       return <SecurityAuditPanel />
     case 'debug':

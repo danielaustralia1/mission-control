@@ -1268,6 +1268,30 @@ const migrations: Migration[] = [
     up(db: Database.Database) {
       db.exec(`ALTER TABLE agents ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0`)
     }
+  },
+  {
+    id: '043_agent_interactions',
+    up(db: Database.Database) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS agent_interactions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          from_agent TEXT NOT NULL,
+          to_agent TEXT NOT NULL,
+          interaction_type TEXT NOT NULL,
+          task_id INTEGER,
+          context TEXT,
+          status TEXT NOT NULL DEFAULT 'active',
+          workspace_id INTEGER NOT NULL DEFAULT 1,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+          completed_at INTEGER,
+          FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE SET NULL
+        )
+      `)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_interactions_from_agent ON agent_interactions(workspace_id, from_agent)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_interactions_to_agent ON agent_interactions(workspace_id, to_agent)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_interactions_task_id ON agent_interactions(workspace_id, task_id)`)
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_agent_interactions_created_at ON agent_interactions(workspace_id, created_at)`)
+    }
   }
 ]
 

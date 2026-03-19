@@ -307,7 +307,18 @@ export async function PUT(
     
     if (assigned_to !== undefined && assigned_to !== currentTask.assigned_to) {
       changes.push(`assigned: ${currentTask.assigned_to || 'unassigned'} → ${assigned_to || 'unassigned'}`);
-      
+
+      // Auto-record handoff interaction
+      if (currentTask.assigned_to && assigned_to) {
+        try {
+          db.prepare(`INSERT INTO agent_interactions (from_agent, to_agent, interaction_type, task_id, context, workspace_id)
+            VALUES (?, ?, 'handoff', ?, ?, ?)`).run(
+            currentTask.assigned_to, assigned_to, taskId,
+            JSON.stringify({ task_title: currentTask.title }), workspaceId
+          )
+        } catch { /* ignore if table not yet migrated */ }
+      }
+
       // Create notification for new assignee
       if (assigned_to) {
         db_helpers.ensureTaskSubscription(taskId, assigned_to, workspaceId);

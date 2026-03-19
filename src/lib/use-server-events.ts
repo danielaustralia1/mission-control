@@ -165,6 +165,11 @@ export function useServerEvents() {
           }
           break
 
+        // Coordination events (panel will poll)
+        case 'coordination.interaction_created':
+        case 'coordination.interaction_updated':
+          break
+
         // Activity events
         case 'activity.created':
           if (event.data?.id) {

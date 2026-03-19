@@ -48,6 +48,7 @@ const navGroups: NavGroup[] = [
       { id: 'exec-approvals', label: 'Approvals', icon: <ApprovalsIcon />, priority: false },
       { id: 'office', label: 'Office', icon: <OfficeIcon />, priority: false },
       { id: 'monitor', label: 'Monitor', icon: <MonitorIcon />, priority: false },
+      { id: 'coordination', label: 'Coordination', icon: <CoordinationIcon />, priority: false },
     ],
   },
   {
@@ -96,6 +97,7 @@ const navItemTranslationKeys: Record<string, string> = {
   nodes: 'nodes',
   'exec-approvals': 'approvals',
   office: 'office',
+  coordination: 'coordination',
   cron: 'cron',
   webhooks: 'webhooks',
   alerts: 'alerts',
@@ -1489,6 +1491,17 @@ function SecurityIcon() {
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M8 1l6 3v4c0 3.5-2.5 6.5-6 7.5C4.5 14.5 2 11.5 2 8V4l6-3z" />
       <path d="M5.5 8l2 2 3.5-3.5" />
+    </svg>
+  )
+}
+
+function CoordinationIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="4" cy="4" r="2" />
+      <circle cx="12" cy="4" r="2" />
+      <circle cx="8" cy="13" r="2" />
+      <path d="M5.5 5.5L7 11M10.5 5.5L9 11M6 4h4" />
     </svg>
   )
 }
